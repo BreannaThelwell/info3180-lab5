@@ -8,13 +8,14 @@ This file creates your application.
 from app import app, db #added db import
 from app.forms import MovieForm #exercise 1 form
 from app.models import Movie #exercise 2 db
-from flask import render_template, request, jsonify, send_file
+from flask import request, jsonify, send_file #render_template
+from flask_wtf.csrf import generate_csrf #required import
 from werkzeug.utils import secure_filename #for uploads folder
 import os
 
 
 #exercise 3 new route
- @app.route('/api/v1/movies', methods=['POST'])
+@app.route('/api/v1/movies', methods=['POST'])
 def movies():
     form = MovieForm() #instantiate form class
     if form.validate_on_submit(): #validate form upload on submit
@@ -41,11 +42,17 @@ def movies():
             "poster": filename,
             "description": description
         }), 201
-     else:
+    else:
         # Return form errors
         return jsonify({
             "errors": form_errors(form)
         }), 400
+
+#securely send token
+@app.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf():
+    return jsonify({'csrf_token': generate_csrf()})
+
 ###
 # Routing for your application.
 ###
@@ -96,4 +103,4 @@ def add_header(response):
 @app.errorhandler(404)
 def page_not_found(error):
     """Custom 404 page."""
-    return render_template('404.html'), 404
+    return jsonify(error="Page not found"), 404
