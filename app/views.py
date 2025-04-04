@@ -8,7 +8,7 @@ This file creates your application.
 from app import app, db #added db import
 from app.forms import MovieForm #exercise 1 form
 from app.models import Movie #exercise 2 db
-from flask import request, jsonify, send_file #render_template
+from flask import request, jsonify, send_file, send_from_directory #render_template
 from flask_wtf.csrf import generate_csrf #required import
 from werkzeug.utils import secure_filename #for uploads folder
 import os
@@ -47,6 +47,26 @@ def movies():
         return jsonify({
             "errors": form_errors(form)
         }), 400
+
+#exercise 5 
+# GET all movies
+@app.route('/api/v1/movies', methods=['GET'])
+def get_movies():
+    movies = Movie.query.all()
+    movies_list = [{
+        'id': movie.id,
+        'title': movie.title,
+        'description': movie.description,
+        'poster': f'/api/v1/posters/{movie.poster}'
+    } for movie in movies]
+    return jsonify({'movies': movies_list})
+
+#for uploaded posters
+@app.route('/api/v1/posters/<filename>')
+def get_poster(filename):
+    upload_folder = os.path.join(os.getcwd(), 'uploads') #path
+    return send_from_directory(upload_folder, filename)
+
 
 #securely send token
 @app.route('/api/v1/csrf-token', methods=['GET'])
@@ -103,4 +123,4 @@ def add_header(response):
 @app.errorhandler(404)
 def page_not_found(error):
     """Custom 404 page."""
-    return jsonify(error="Page not found"), 404
+    return jsonify(error="Page not found"), 404 #removed template and used json instead
